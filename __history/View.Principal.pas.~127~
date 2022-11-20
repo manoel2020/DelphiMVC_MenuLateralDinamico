@@ -1,0 +1,250 @@
+unit View.Principal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
+  FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
+  FireDAC.Phys, FireDAC.Phys.FB, FireDAC.Phys.FBDef, FireDAC.VCLUI.Wait,
+  FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, Data.DB,
+  FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+
+type
+  TForm1 = class(TForm)
+    Panel3: TPanel;
+    Panel1: TPanel;
+    pnlMenuPrincipal: TPanel;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    SpeedButton3: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    Panel2: TPanel;
+    pnlPesquisa: TPanel;
+    Edit1: TEdit;
+    ScrollModulos: TScrollBox;
+    pnlItens: TPanel;
+    Panel4: TPanel;
+    btnVoltarMenu: TSpeedButton;
+    ScrollItens: TScrollBox;
+    FDConnection1: TFDConnection;
+    qyModulos: TFDQuery;
+    procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure btnVoltarMenuClick(Sender: TObject);
+    procedure ScrollModulosMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure ScrollModulosMouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+  private
+    { Private declarations }
+    procedure GerarMenuModulos();
+    procedure CriarBtn(Caption, Nome: String; parent: TWinControl;
+      onClick: TNotifyEvent; tag: Integer = 0);
+    procedure DestruirBtn(parent: TWinControl);
+
+    // procedure de clique Dinamico
+    procedure CliqueBtnModulo(Sender: TObject);
+    procedure CliqueBtnCategoria(Sender: TObject);
+    procedure CliqueAbrirForm(Sender: TObject);
+
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.btnVoltarMenuClick(Sender: TObject);
+begin
+  //
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  // DestruirBtn(ScrollModulos);
+  DestruirBtn(ScrollItens);
+end;
+
+procedure TForm1.CliqueAbrirForm(Sender: TObject);
+begin
+  ShowMessage('Abir o form ' + TButton(Sender).Name);
+end;
+
+procedure TForm1.CliqueBtnCategoria(Sender: TObject);
+var
+  CaptionBtn,
+  Nomebtn: String;
+begin
+  try
+    qyModulos.sql.Clear;
+    qyModulos.sql.Add('SELECT ');
+    qyModulos.sql.Add('  MCI.ID_CATEGORIA, MCI.DESC_CATEGORIA_ITEM, MC.DESC_CATEGORIA');
+    qyModulos.sql.Add('FROM MENU_CATEGORIA_ITENS MCI');
+    qyModulos.sql.Add('LEFT JOIN MENU_CATEGORIAS MC ON ');
+    qyModulos.sql.Add('  MC.ID_CATEGORIA = MCI.ID_CATEGORIA');
+    qyModulos.sql.Add('WHERE MCI.ID_MODULO = :ID_MODULO');
+    qyModulos.sql.Add('  AND MCI.ID_CATEGORIA = :ID_CATEGORIA');
+    qyModulos.ParamByName('ID_CATEGORIA').AsInteger := TButton(Sender).Tag;
+    qyModulos.ParamByName('ID_MODULO').AsInteger := btnVoltarMenu.Tag;
+    qyModulos.Open;
+
+    btnVoltarMenu.Caption := TButton(Sender).Caption;
+    // Destruir os componentes dentro do ScrollItens
+    DestruirBtn(ScrollItens);
+
+    qyModulos.First;
+    while not qyModulos.Eof do
+    begin
+      CaptionBtn := qyModulos.FieldByName('DESC_CATEGORIA_ITEM').AsString;
+      Nomebtn := qyModulos.FieldByName('DESC_CATEGORIA').AsString+'item'+;
+
+      CriarBtn(Caption, Nome_id, ScrollItens, CliqueAbrirForm);
+
+      qyModulos.Next;
+    end;
+
+  finally
+    pnlItens.Visible := True;
+    qyModulos.Close;
+  end;
+end;
+
+procedure TForm1.CliqueBtnModulo(Sender: TObject);
+var
+  Caption_btn,
+  NomeBtn: String;
+  Tag_Id_Botao: Integer;
+begin
+  Tag_Id_Botao := 0;
+  try
+    qyModulos.sql.Clear;
+    qyModulos.sql.Add(' SELECT DISTINCT ');
+    qyModulos.sql.Add('   MCI.ID_CATEGORIA,MC.DESC_CATEGORIA ');
+    qyModulos.sql.Add(' FROM MENU_CATEGORIA_ITENS MCI ');
+    qyModulos.sql.Add(' LEFT JOIN MENU_CATEGORIAS MC ON ');
+    qyModulos.sql.Add('   MC.ID_CATEGORIA = MCI.ID_CATEGORIA ');
+    qyModulos.sql.Add('WHERE MCI.ID_MODULO = 1 = :ID_MODULO');
+    qyModulos.SQL.Add('ORDER BY MC.DESC_CATEGORIA');
+    qyModulos.ParamByName('ID_MODULO').AsInteger := TButton(Sender).Tag;
+    qyModulos.Open;
+
+    // Destruir os componentes dentro do ScrollItens
+    DestruirBtn(ScrollItens);
+
+    qyModulos.First;
+    while not qyModulos.Eof do
+    begin
+      Caption_btn := qyModulos.FieldByName('DESC_CATEGORIA').AsString;
+      Tag_Id_Botao := qyModulos.FieldByName('ID_CATEGORIA').AsInteger;
+      NomeBtn := 'Modulo_Categoria'+IntToStr(Tag_Id_Botao);
+
+      CriarBtn(Caption_btn, NomeBtn, ScrollItens, CliqueBtnCategoria, Tag_Id_Botao);
+
+      qyModulos.Next;
+    end;
+
+  finally
+    btnVoltarMenu.Caption := TButton(Sender).Caption;
+    btnVoltarMenu.tag := Tag_Id_Botao;
+    pnlItens.Visible := True;
+    qyModulos.Close;
+  end;
+
+end;
+
+procedure TForm1.CriarBtn(Caption, Nome: String; parent: TWinControl;
+  onClick: TNotifyEvent; tag: Integer = 0);
+var
+  btn: TButton;
+begin
+  btn := TButton.Create(parent);
+  btn.Name := Nome;
+  btn.Caption := Caption;
+  btn.parent := parent;
+  btn.Align := TAlign.alTop;
+  btn.Height := 40;
+  btn.Cursor := crHandPoint;
+  btn.tag := tag;
+  btn.WordWrap := True;
+  btn.onClick := onClick;
+end;
+
+procedure TForm1.DestruirBtn(parent: TWinControl);
+var
+  i: Integer;
+begin
+
+  for i := Pred(parent.ControlCount) downto 0 do
+  begin
+    if parent.Controls[i] is TButton then
+    begin
+      FreeAndNil((parent.Controls[i] as TButton));
+    end;
+  end;
+
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  GerarMenuModulos();
+end;
+
+procedure TForm1.GerarMenuModulos;
+var
+  Caption_btn,
+  NomeBtn_Modulo: String;
+  Tag_Id_Botao: Integer;
+begin
+  try
+    qyModulos.sql.Clear;
+    qyModulos.sql.Add('SELECT * FROM MENU_MODULOS');
+    qyModulos.Open;
+
+    qyModulos.First;
+    while not qyModulos.Eof do
+    begin
+
+      Caption_btn := qyModulos.FieldByName('DESC_MODULO').AsString;
+      Tag_Id_Botao := qyModulos.FieldByName('ID_MODULO').AsInteger;
+      NomeBtn_Modulo := 'Modulo_'+IntToStr(Tag_Id_Botao);
+
+      CriarBtn(Caption_btn, NomeBtn_Modulo, ScrollModulos, CliqueBtnModulo, Tag_Id_Botao);
+
+      qyModulos.Next;
+
+    end;
+  finally
+    qyModulos.Close;
+  end;
+end;
+
+procedure TForm1.ScrollModulosMouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  With ScrollModulos.VertScrollBar Do
+  Begin
+    If (Position <= (Range - Increment)) Then
+     Position := Position + Increment Else
+      Position := Range - Increment;
+   End;
+end;
+
+procedure TForm1.ScrollModulosMouseWheelUp(Sender: TObject; Shift: TShiftState;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+  With ScrollModulos.VertScrollBar Do
+  Begin
+  If (Position >= Increment) Then
+   Position := Position - Increment Else
+    Position := 0;
+  End;
+end;
+
+end.

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2022/11/05 21:10:07.000.070,=E:\Projetos Delphi\Unit1.pas</Transaction>
+    <Transaction>2022/11/05 21:11:30.000.039,E:\Projetos Delphi\Unit1.dfm=E:\Estudos Delphi\Projetos\Teste2_MenuDinamico\View.Principal.dfm</Transaction>
+    <Transaction>2022/11/05 21:11:30.000.039,E:\Projetos Delphi\Unit1.pas=E:\Estudos Delphi\Projetos\Teste2_MenuDinamico\View.Principal.pas</Transaction>
+    <Transaction>2022/11/05 22:05:38.000.772,E:\Projetos Delphi\Project1.dproj=E:\Estudos Delphi\Projetos\Teste2_MenuDinamico\Teste2_MenuDinamico.dproj</Transaction>
+  </Transactions>
+</BorlandProject>
